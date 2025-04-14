@@ -1,5 +1,6 @@
 // Program to iterate through all strategies to find optimal
-// g++ -I .\Eigen\ .\search.cpp
+// g++ -I .\Eigen\ -o ..\naive_search.exe .\naive_search.cpp
+// Sample command: ..\naive_search.exe -t 10 -i 3 -p 0.5 -r 3.5
 #include <iostream>
 #include <unordered_map>
 #include <cmath>
@@ -18,40 +19,21 @@ float compute_EHT(int* strat, int length, int init, float p, float r_cost){
     Output:
     - float: Expected Hitting Time
     */
-    Eigen::MatrixXf A(length,length);
-    Eigen::VectorXf b(length);
+    Eigen::MatrixXf A = Eigen::MatrixXf::Zero(length, length);
+    Eigen::VectorXf b = Eigen::VectorXf::Ones(length);
      
     for (int i=0; i<length; i++){
-        if (*(strat+i)==0){
+        if (*(strat+i)==0){ //Reset. x_i = x_init + r_cost
             b(i) = r_cost;
-            for (int j=0; j<length; j++){
-                if (j==init){
-                    A(i,j) = -1;
-                }
-                else if (j==i){
-                    A(i,j) = 1;
-                }
-                else{
-                    A(i,j) = 0;
-                }
-            }
+            A(i, i) = 1;
+            A(i, init) = -1;
         }
-        else{
-        b(i) = 0;
-            for (int j=0; j<length; j++){
-                if (j==i+*(strat+i)){
-                    A(i,j) = -p;
-                }
-                else if (j==i-*(strat+i)){
-                    A(i,j) = -(1-p);
-                }
-                else if (j==i){
-                    A(i,j) = 1;
-                }
-                else{
-                    A(i,j) = 0;
-                }
-            }
+        else{ // x_i = p x_(i+j) {if i+j>=length then drop this term} + (1-p)x_(i-j) + 1 
+            A(i, i) = 1;
+            if (i+*(strat+i)<length){
+                A(i, i+*(strat+i)) = -p;
+            } 
+            A(i, i-*(strat+i)) = -(1-p);
         }
     }
 
@@ -76,19 +58,32 @@ int sum_array(int* array, int length){
     return sum;
 }
 
-int main() {
-    int target, init; // Target wealth and initial wealth
-    float p, r_cost; // Probability of winning, reset time cost
-    cout << "Please enter an integer target: ";
-    cin >> target;
-    cout << "\nPlease enter an initial amount: ";
-    cin >> init;
-    cout << "\nPlease enter probability you win a bet: ";
-    cin >> p;
-    cout << "\nPlease enter time cost of reset: ";
-    cin >> r_cost;
+int main(int argc,char* argv[]) {
+    float p = -1.0, r_cost = -1.0;
+    int target = -1, init=-1, r=-1;
+    // Simple parser
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
 
-    //cout << "Target: " << target << ", Initial: " << init << ", Prob of win: " << p <<  ", Time reset cost: " << r_cost << endl;
+        if (arg == "-t" && i + 1 < argc) {
+            target = std::atoi(argv[++i]);
+        } else if (arg == "-i" && i + 1 < argc) {
+            init = std::atoi(argv[++i]);
+        } else if (arg == "-p" && i + 1 < argc) {
+            p = std::atof(argv[++i]);
+        } else if (arg == "-r" && i + 1 < argc) {
+            r_cost = std::atof(argv[++i]);
+        } else {
+            std::cerr << "Unknown or malformed argument: " << arg << '\n';
+            return 1;
+        }
+    }
+
+    // Validate that all are set
+    if (target == -1 || init == -1 || p == -1.0 || r_cost == -1) {
+        std::cerr << "Usage: program -t <target> -i <init> -p <probability> -r <reset_cost>\n";
+        return 1;
+    }
     
     /*  Iterate through possible values of x_r, x_a
     x_r is the largest integer wealth to reset
@@ -114,7 +109,7 @@ int main() {
 
             // eval EHT
             score = compute_EHT(&strat[0], target, init, p, r_cost);
-            if (score>best_score){
+            if (score<best_score or best_score==-1){
                 best_score = score;
                 for  (int i=0; i<target; i++){
                     best_strat[i] = strat[i];
@@ -139,7 +134,7 @@ int main() {
             if ((x_a == x_r + 1)){
                 // Eval EHT
                 score = compute_EHT(&strat[0], target, init, p, r_cost);
-                if (score>best_score){
+                if (score<best_score or best_score==-1){
                     best_score = score;
                     for  (int i=0; i<target; i++){
                         best_strat[i] = strat[i];
@@ -155,7 +150,7 @@ int main() {
 
                 //eval EHT
                 score = compute_EHT(&strat[0], target, init, p, r_cost);
-                if (score>best_score){
+                if (score<best_score or best_score==-1){
                     best_score = score;
                     for  (int i=0; i<target; i++){
                         best_strat[i] = strat[i];
@@ -183,7 +178,7 @@ int main() {
                         }
                         // Eval EHT
                         score = compute_EHT(&strat[0], target, init, p, r_cost);
-                        if (score>best_score){
+                        if (score<best_score or best_score==-1){
                             best_score = score;
                             for  (int i=0; i<target; i++){
                                 best_strat[i] = strat[i];
@@ -207,7 +202,7 @@ int main() {
                         }
                         // Eval EHT
                         score = compute_EHT(&strat[0], target, init, p, r_cost);
-                        if (score>best_score){
+                        if (score<best_score or best_score==-1){
                             best_score = score;
                             for  (int i=0; i<target; i++){
                                 best_strat[i] = strat[i];
