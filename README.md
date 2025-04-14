@@ -24,6 +24,29 @@ So in fact the betting strategy should never be more than $`x^* - x`$ (where $x$
 Furthermore, from a time optimisation perspective, it makes sense to also take into account the possibility of restarting 
 if our currency balance is too low.
 
+## Usage of Program
+
+If you're uninterested in the methodology and just want to use this for your stardew valley run. First pick your `target_amount` of tokens, your `initial_amount` of tokens, set the `probability_of_winning` (dependent on luck) and an estimate to the amount of time it takes you to restart the day relative to a wheel spin `reset_time`.
+
+Go to the project directory and run the following command on your terminal:
+
+```
+./value_iteration.exe -t <target_amount> -i <initial amount> -p <probability_of_winning> -r <reset_time>
+```
+
+Currently, the output is printed on the terminal with the format being something like:
+
+```
+The best strat is: <bet size at 0>, <bet size at 1>, ... , <bet size at target_amount-1>
+The expected hitting times are: <EHT at 0>, <EHT at 1>, ..., <EHT at target_amouunt-1>
+```
+A bet size of 0 represents just resetting the day. The results are also saved to `results.csv`. The output file location can be changed with the flag `-o`.
+
+By default, the convergence threshold is 0.0001 and the maximum number of iterations is 100000. If you wish to change this, add the optional flags `-e` and `-m`. Sample command on the terminal would be:
+```
+./value_iteration.exe -t <target_amount> -i <initial amount> -p <probability_of_winning> -r <reset_time> -m 1000 -e 0.01 -o ./results2.csv
+```
+
 ## Literature Review
 
 Optimal betting size for recurring games is a well discussed area but they often seek to optimise an increasing utility function of wealth, or do not deal with discrete bet sizes. 
@@ -69,7 +92,9 @@ Clearly this is an expensive algorithm that does not scale well since the number
 ### Value Iteration
 
 Given that our problem is a discrete-time finite Markov decision process,
-a better way to solve this is use a value iteration approach in Dynamic Programming. A proof of convergence can be found at https://arxiv.org/pdf/2009.11403
+a better way to solve this is use a value iteration approach in Dynamic Programming (i.e. iterative in-place updating of value of state until converegence). Details of the algorithm and proof of convergence can be found at https://arxiv.org/pdf/2009.11403
+
+You may note that value iteration algorithm does not need the above observations, but I found it useful both as a sanity check and as a check for convergence by observing if the properties above hold for the optimal solution found by value iteration.
 
 ## Proofs
 

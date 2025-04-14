@@ -1,7 +1,8 @@
 // Program to iterate through all strategies to find optimal
-// g++ -I .\Eigen\ -o ..\value_iteration.exe .\value_iteration.cpp
+// g++ -o ..\value_iteration.exe .\value_iteration.cpp
 // Sample command: ..\value_iteration.exe -t 10 -i 3 -p 0.5 -r 3.5
 #include <iostream>
+#include <fstream>
 #include <vector>
 //#include <unordered_map>
 //#include <cmath>
@@ -9,24 +10,10 @@
 
 using namespace std;
 
-int sum_array(int* array, int length){
-    /* Add elements of integer array. Pass by reference.
-    Inputs:
-    - array: pointer to start of array
-    - length: length of array to sum
-    Output:
-    - integer sum of elements in array
-    */
-    int sum = 0;
-    for (int i=0; i<length; i++){
-        sum = sum + *(array+i);
-    }
-    return sum;
-}
-
 int main(int argc,char* argv[]) {
     float p = -1.0, r_cost = -1.0, eps = 0.0001;
-    int target = -1, init=-1, r=-1, max_iter=10000;
+    int target = -1, init=-1, r=-1, max_iter=100000;
+    string file_output = "./results.csv";
     // Simple parser
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -43,6 +30,8 @@ int main(int argc,char* argv[]) {
             eps = std::atof(argv[++i]); // optional arg
         } else if (arg == "-m" && i + 1 < argc) {
             max_iter = std::atoi(argv[++i]); // optional arg
+        } else if (arg == "-o" && i + 1 < argc) {
+            file_output = argv[++i]; // optional arg
         } else {
             std::cerr << "Unknown or malformed argument: " << arg << '\n';
             return 1;
@@ -105,22 +94,31 @@ int main(int argc,char* argv[]) {
         //Update strat
         strat[i] = best_strat;
     }
-    
+
+    std::ofstream f;
+    f.open(file_output);
+    f << "Wealth,";
+    for (int i=0;i<target;i++){
+        f << i;
+        f << ',';
+    } f << '\n';
     // unordered_map<int, int> umap;
     cout << "The best strat is: ";
+    f << "Bet size,";
     for (int i=0; i<target;i++){
-        cout << strat[i] << "," ;
-    } cout << '\n';
+        cout << strat[i] << ',' ;
+        f << strat[i];
+        f << ',';
+    } cout << '\n'; f << '\n';
+
     cout << endl << "The expected hitting times are: ";
+    f << "Expected Hitting Time,";
     for (int i=0; i<target;i++){
-        cout << -value[i] << "," ;
-    }
+        cout << -value[i] << ',' ;
+        f << -value[i];
+        f << ',';
+    } cout << '\n'; f << '\n';
+
+    f.close();
     return 0;
 }
-
-/*
-
-
-int test[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    cout << add_array(&test[5], 3) << endl;
-*/

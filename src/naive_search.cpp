@@ -231,10 +231,3 @@ int main(int argc,char* argv[]) {
     cout << endl << "The EHT is: " << best_score;
     return 0;
 }
-
-/*
-
-
-int test[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    cout << add_array(&test[5], 3) << endl;
-*/
